@@ -562,3 +562,18 @@ body::after {
   background: rgba(184, 52, 40, 0.08);
   border-color: var(--red);
 }
+.btn-warning {
+  padding: 10px 22px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: #d4a017;
+  border: 1px solid rgba(212, 160, 23, 0.35);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-warning:hover {
+  background: rgba(212, 160, 23, 0.08);
+  border-color: #d4a017;
+}

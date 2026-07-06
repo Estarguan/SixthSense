@@ -22,6 +22,7 @@ export default function App() {
   useStreamRelay(streamRef, ready)
   const { analyze } = useSuspiciousMode()
   const analyzingRef = useRef(false)
+  const fileInputRef = useRef(null)
 
   const enterSuspiciousMode = useCallback(async () => {
     if (analyzingRef.current) return
@@ -64,6 +65,51 @@ export default function App() {
     () => handleTrigger('keyword'),
   )
   useAudioTrigger(isMonitoring && !isSuspicious, () => handleTrigger('audio'))
+
+  async function analyzeUploadedVideo(file) {
+    if (analyzingRef.current) return
+    analyzingRef.current = true
+    setIsSuspicious(true)
+    setAnalysisResult(null)
+    setCountdown(null)
+
+    const time = new Date().toLocaleTimeString('en-US', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+    })
+    setAlerts(prev => [{ id: Date.now(), time, type: 'upload' }, ...prev])
+
+    try {
+      const mimeType = file.type || 'video/mp4'
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve(reader.result.replace(/^data:.*;base64,/, ''))
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+
+      const res = await fetch('http://localhost:3001/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoBase64: base64, mimeType }),
+      })
+      const result = await res.json()
+      setAnalysisResult(result)
+
+      if (result.decision === 'send_alert') {
+        const alertTime = new Date().toLocaleTimeString('en-US', {
+          hour: '2-digit', minute: '2-digit', second: '2-digit',
+        })
+        setAlerts(prev => [{ id: Date.now(), time: alertTime, type: 'alert', confidence: result.confidence }, ...prev])
+      } else if (result.decision === 'continue_analyzing') {
+        analyzingRef.current = false
+        setTimeout(() => enterSuspiciousMode(), 1000)
+      }
+    } catch (err) {
+      console.error('Upload analysis failed:', err)
+      setIsSuspicious(false)
+      analyzingRef.current = false
+    }
+  }
 
   function dismissAlert() {
     setIsSuspicious(false)
@@ -122,6 +168,16 @@ export default function App() {
         </div>
 
         <div className="action-bar">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="video/*"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              if (e.target.files[0]) analyzeUploadedVideo(e.target.files[0])
+              e.target.value = ''
+            }}
+          />
           <button
             onClick={async () => {
               await fetch('http://localhost:3001/test-speech', { method: 'POST' })
@@ -136,6 +192,20 @@ export default function App() {
             className="btn-danger"
           >
             [ SEND TEST NOTIFICATION ]
+          </button>
+          <button
+            onClick={() => handleTrigger('manual')}
+            className="btn-warning"
+            disabled={isSuspicious}
+          >
+            [ MANUAL SUSPICIOUS TRIGGER ]
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="btn-warning"
+            disabled={isSuspicious}
+          >
+            [ UPLOAD VIDEO FOR ANALYSIS ]
           </button>
         </div>
       </section>
