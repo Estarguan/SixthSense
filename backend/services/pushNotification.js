@@ -1,9 +1,24 @@
+import { readFileSync, writeFileSync } from 'fs'
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const TOKEN_FILE = join(__dirname, '../.push-token')
+
 const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send'
 
-let pushToken = null
+function loadToken() {
+  try { return readFileSync(TOKEN_FILE, 'utf8').trim() } catch { return null }
+}
+
+let pushToken = loadToken()
+if (pushToken) console.log('Push token loaded from disk:', pushToken)
 
 export function registerToken(token) {
   pushToken = token
+  try { writeFileSync(TOKEN_FILE, token, 'utf8') } catch (err) {
+    console.warn('Could not persist push token:', err.message)
+  }
   console.log('Push token registered:', token)
 }
 

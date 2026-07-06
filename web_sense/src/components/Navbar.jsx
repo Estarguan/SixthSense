@@ -1,19 +1,30 @@
+import { useState, useEffect } from 'react'
+
 export default function Navbar({ isLive }) {
+  const [time, setTime] = useState('')
+
+  useEffect(() => {
+    const update = () =>
+      setTime(new Date().toLocaleTimeString('en-US', { hour12: false }))
+    update()
+    const t = setInterval(update, 1000)
+    return () => clearInterval(t)
+  }, [])
+
   return (
-    <nav className="flex items-center justify-between px-8 py-4 border-b border-white/5">
-      <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center text-sm">👁</div>
-        <span className="text-white font-semibold text-lg tracking-tight">Sixth Sense</span>
+    <nav className="navbar">
+      <div className="navbar-brand">
+        <span className="brand-bracket">[</span>
+        <span className="brand-name">Sixth Sense</span>
+        <span className="brand-bracket">]</span>
       </div>
 
-
-      <div className={`flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full border ${
-        isLive
-          ? 'bg-green-500/10 border-green-500/20 text-green-400'
-          : 'bg-white/5 border-white/10 text-gray-400'
-      }`}>
-        <span className={`w-1.5 h-1.5 rounded-full bg-current ${isLive ? 'animate-pulse-dot' : ''}`} />
-        {isLive ? 'Live' : 'Privacy-First'}
+      <div className="navbar-right">
+        <span className="sys-time">{time}</span>
+        <div className={`status-badge ${isLive ? 'status-live' : 'status-offline'}`}>
+          <span className={isLive ? 'dot-live' : 'dot-off'} />
+          {isLive ? 'MONITORING' : 'OFFLINE'}
+        </div>
       </div>
     </nav>
   )

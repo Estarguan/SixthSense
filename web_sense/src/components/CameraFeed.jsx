@@ -10,33 +10,38 @@ export default function CameraFeed({ streamRef, ready, error }) {
   }, [ready])
 
   return (
-    <div className="bg-[#12141a] border border-white/8 rounded-2xl overflow-hidden flex flex-col">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/8">
-        <span className="text-xs font-semibold tracking-widest text-gray-500 uppercase">Camera Feed</span>
-        <div className="flex items-center gap-1.5 text-xs text-red-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
-          LIVE
+    <div className="panel">
+      <div className="panel-header">
+        <span className="panel-label">CAMERA // FEED</span>
+        <div className="live-indicator">
+          <span className="dot-red" />
+          <span className="panel-label" style={{ color: 'var(--red)' }}>REC</span>
         </div>
       </div>
 
-      <div className="relative aspect-video bg-black flex-1">
+      <div className="camera-viewport">
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
-          className={`w-full h-full object-cover transition-opacity duration-500 ${ready ? 'opacity-100' : 'opacity-0'}`}
+          className={`camera-video ${ready ? 'ready' : ''}`}
         />
+
         {!ready && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-            <span className="text-4xl opacity-20">📷</span>
-            <span className="text-gray-600 text-sm">{error || 'Starting camera...'}</span>
+          <div className="camera-placeholder">
+            <span className="camera-icon">◈</span>
+            <span className="camera-status">{error ? error.toUpperCase() : 'INITIALIZING...'}</span>
           </div>
         )}
+
+        {ready && <div className="camera-scan-wrap" />}
+        <div className="camera-crt" />
       </div>
 
-      <div className="px-4 py-2.5 border-t border-white/5">
-        <p className="text-xs text-gray-600">Monitoring active — watching for suspicious activity</p>
+      <div className="panel-footer">
+        <span className="panel-label">MONITORING ACTIVE</span>
+        <span className="panel-label">TRIGGERS ARMED</span>
       </div>
     </div>
   )

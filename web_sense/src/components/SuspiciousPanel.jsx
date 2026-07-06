@@ -1,66 +1,62 @@
+const SEGMENTS = 20
+
 export default function SuspiciousPanel({ countdown, result, onDismiss }) {
   if (!result) {
-    const progress = ((10 - countdown) / 10) * 100
-
+    const filled = Math.round(((10 - countdown) / 10) * SEGMENTS)
     return (
-      <div className="bg-yellow-500/[0.05] border border-yellow-500/20 rounded-2xl p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-xl animate-pulse">🔍</span>
-          <h3 className="text-yellow-400 font-semibold">Suspicious Activity — Analyzing</h3>
+      <div className="suspicious-panel suspicious-analyzing">
+        <div className="suspicious-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span className="dot-amber" />
+            <span className="suspicious-label">SUSPICIOUS ACTIVITY // ANALYZING</span>
+          </div>
+          <span className="suspicious-count">{countdown}s</span>
         </div>
-        <p className="text-gray-400 text-sm mb-4">
-          Recording for <span className="text-white font-medium">{countdown}s</span> — triggers paused
-        </p>
-        <div className="w-full bg-white/5 rounded-full h-1.5">
-          <div
-            className="bg-yellow-400 h-1.5 rounded-full transition-all duration-1000"
-            style={{ width: `${progress}%` }}
-          />
+        <div className="seg-bar">
+          {Array.from({ length: SEGMENTS }).map((_, i) => (
+            <div key={i} className={`seg ${i < filled ? 'seg-amber' : ''}`} />
+          ))}
         </div>
+        <p className="suspicious-sub">RECORDING SEQUENCE — ALL TRIGGERS PAUSED</p>
       </div>
     )
   }
 
-  const isAlert = result.decision === 'send_alert'
+  const isAlert    = result.decision === 'send_alert'
   const isContinue = result.decision === 'continue_analyzing'
-  const isNormal = result.decision === 'return_to_normal'
+  const isNormal   = result.decision === 'return_to_normal'
 
-  const decisionLabel = {
-    send_alert: '🚨 Alert Sent',
-    continue_analyzing: '🔄 Continuing Analysis',
-    return_to_normal: '✅ Returned to Normal',
+  const label = {
+    send_alert:        'ALERT // THREAT CONFIRMED',
+    continue_analyzing:'ANALYZING // CONTINUING WATCH',
+    return_to_normal:  'CLEAR // RETURNED TO NORMAL',
   }[result.decision]
 
-  const borderColor = isAlert
-    ? 'border-red-500/30 bg-red-500/[0.04]'
-    : isContinue
-    ? 'border-yellow-500/20 bg-yellow-500/[0.04]'
-    : 'border-green-500/20 bg-green-500/[0.04]'
-
-  const labelColor = isAlert ? 'text-red-400' : isContinue ? 'text-yellow-400' : 'text-green-400'
+  const panelClass  = isAlert ? 'suspicious-alert' : isContinue ? 'suspicious-continue' : 'suspicious-clear'
+  const labelColor  = isAlert ? 'var(--red)' : isContinue ? 'var(--amber)' : 'var(--phosphor)'
+  const segClass    = isAlert ? 'seg-red' : isContinue ? 'seg-amber' : 'seg-green'
+  const filled      = Math.round((result.confidence / 10) * SEGMENTS)
 
   return (
-    <div className={`border rounded-2xl p-6 ${borderColor}`}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className={`font-semibold ${labelColor}`}>{decisionLabel}</h3>
-        <span className="text-xs text-gray-500">Confidence: {result.confidence}/10</span>
+    <div className={`suspicious-panel ${panelClass}`}>
+      <div className="suspicious-header">
+        <span className="suspicious-label" style={{ color: labelColor }}>{label}</span>
+        <span className="suspicious-count" style={{ color: 'var(--text-dim)', fontSize: '11px' }}>
+          CONF {result.confidence}/10
+        </span>
       </div>
 
-      <div className="w-full bg-white/5 rounded-full h-1.5 mb-4">
-        <div
-          className={`h-1.5 rounded-full ${isAlert ? 'bg-red-400' : isContinue ? 'bg-yellow-400' : 'bg-green-400'}`}
-          style={{ width: `${(result.confidence / 10) * 100}%` }}
-        />
+      <div className="seg-bar">
+        {Array.from({ length: SEGMENTS }).map((_, i) => (
+          <div key={i} className={`seg ${i < filled ? segClass : ''}`} />
+        ))}
       </div>
 
-      <p className="text-gray-400 text-sm leading-relaxed mb-4">{result.analysis}</p>
+      <p className="suspicious-analysis">{result.analysis}</p>
 
       {(isAlert || isNormal) && (
-        <button
-          onClick={onDismiss}
-          className="text-xs text-gray-500 hover:text-gray-300 transition-colors underline"
-        >
-          {isNormal ? 'Proceed' : 'Dismiss'}
+        <button onClick={onDismiss} className="btn-dismiss">
+          {isNormal ? '[ PROCEED ]' : '[ DISMISS ]'}
         </button>
       )}
     </div>

@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications'
 import { Platform } from 'react-native'
+import Constants from 'expo-constants'
 
 const BACKEND_URL = 'http://10.37.103.237:3001'
 
@@ -25,7 +26,9 @@ export async function registerForPushNotifications() {
     return null
   }
 
-  const token = (await Notifications.getExpoPushTokenAsync()).data
+  const token = (await Notifications.getExpoPushTokenAsync({
+    projectId: Constants.expoConfig?.extra?.eas?.projectId,
+  })).data
   console.log('Push token:', token)
 
   try {
